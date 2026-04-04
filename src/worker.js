@@ -955,9 +955,226 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     const path = url.pathname;
+    const method = request.method;
     const origin = request.headers.get('Origin') || '';
 
-    // API routes
+    if (method === 'OPTIONS') {
+      return new Response(null, { status: 204, headers: corsHeaders(origin) });
+    }
+
+    // Init D1 tables
+    if (env.DB && path.startsWith('/api/')) {
+      await env.DB.batch([
+        env.DB.prepare(`CREATE TABLE IF NOT EXISTS rc_projects (
+          id TEXT PRIMARY KEY, name TEXT NOT NULL, language TEXT DEFAULT 'javascript',
+          description TEXT, owner TEXT DEFAULT 'anonymous', is_public INTEGER DEFAULT 0,
+          created_at TEXT DEFAULT (datetime('now')), updated_at TEXT DEFAULT (datetime('now'))
+        )`),
+        env.DB.prepare(`CREATE TABLE IF NOT EXISTS rc_files (
+          id TEXT PRIMARY KEY, project_id TEXT NOT NULL, path TEXT NOT NULL,
+          content TEXT DEFAULT '', language TEXT, size INTEGER DEFAULT 0,
+          version INTEGER DEFAULT 1, created_at TEXT DEFAULT (datetime('now')),
+          updated_at TEXT DEFAULT (datetime('now'))
+        )`),
+        env.DB.prepare(`CREATE TABLE IF NOT EXISTS rc_executions (
+          id TEXT PRIMARY KEY, project_id TEXT, language TEXT, code TEXT,
+          stdout TEXT, stderr TEXT, exit_code INTEGER DEFAULT 0, duration_ms INTEGER,
+          created_at TEXT DEFAULT (datetime('now'))
+        )`),
+        env.DB.prepare(`CREATE TABLE IF NOT EXISTS rc_deploys (
+          id TEXT PRIMARY KEY, project_id TEXT NOT NULL, target TEXT DEFAULT 'cloudflare',
+          status TEXT DEFAULT 'pending', url TEXT, created_at TEXT DEFAULT (datetime('now'))
+        )`),
+        env.DB.prepare(`CREATE TABLE IF NOT EXISTS rc_snippets (
+          id TEXT PRIMARY KEY, title TEXT NOT NULL, language TEXT DEFAULT 'javascript',
+          code TEXT NOT NULL, tags TEXT DEFAULT '[]', owner TEXT DEFAULT 'community',
+          is_public INTEGER DEFAULT 1, created_at TEXT DEFAULT (datetime('now'))
+        )`),
+      ]);
+    }
+
+    const db = env.DB;
+
+    // ─── D1-backed API routes ───
+    if (path.startsWith('/api/') && db) {
+      // Projects CRUD
+      if (path === '/api/projects' && method === 'POST') {
+        const body = await request.json();
+        if (!body.name) return json({ error: 'name required' }, 400, origin);
+        const id = crypto.randomUUID();
+        await db.prepare('INSERT INTO rc_projects (id, name, language, description, owner) VALUES (?, ?, ?, ?, ?)')
+          .bind(id, body.name, body.language || 'javascript', body.description || '', body.owner || 'anonymous').run();
+        return json({ ok: true, id, name: body.name }, 201, origin);
+      }
+
+      if (path === '/api/projects' && method === 'GET') {
+        const owner = url.searchParams.get('owner');
+        let q = 'SELECT * FROM rc_projects';
+        const params = [];
+        if (owner) { q += ' WHERE owner = ?'; params.push(owner); }
+        q += ' ORDER BY updated_at DESC LIMIT 50';
+        const result = await db.prepare(q).bind(...params).all();
+        return json({ projects: result.results || [] }, 200, origin);
+      }
+
+      const projMatch = path.match(/^\/api\/projects\/([^/]+)$/);
+      if (projMatch && method === 'GET') {
+        const proj = await db.prepare('SELECT * FROM rc_projects WHERE id = ?').bind(projMatch[1]).first();
+        if (!proj) return json({ error: 'Project not found' }, 404, origin);
+        const files = await db.prepare('SELECT id, path, language, size, version, updated_at FROM rc_files WHERE project_id = ? ORDER BY path').bind(projMatch[1]).all();
+        return json({ project: proj, files: files.results || [] }, 200, origin);
+      }
+
+      if (projMatch && method === 'DELETE') {
+        await db.prepare('DELETE FROM rc_files WHERE project_id = ?').bind(projMatch[1]).run();
+        await db.prepare('DELETE FROM rc_projects WHERE id = ?').bind(projMatch[1]).run();
+        return json({ ok: true, deleted: projMatch[1] }, 200, origin);
+      }
+
+      // Files CRUD
+      const filesMatch = path.match(/^\/api\/projects\/([^/]+)\/files$/);
+      if (filesMatch && method === 'POST') {
+        const body = await request.json();
+        if (!body.path) return json({ error: 'path required' }, 400, origin);
+        const content = body.content || '';
+        const existing = await db.prepare('SELECT id, version FROM rc_files WHERE project_id = ? AND path = ?').bind(filesMatch[1], body.path).first();
+        if (existing) {
+          await db.prepare("UPDATE rc_files SET content = ?, size = ?, version = version + 1, language = ?, updated_at = datetime('now') WHERE id = ?")
+            .bind(content, content.length, body.language || 'javascript', existing.id).run();
+          return json({ ok: true, id: existing.id, version: existing.version + 1, action: 'updated' }, 200, origin);
+        }
+        const id = crypto.randomUUID();
+        await db.prepare('INSERT INTO rc_files (id, project_id, path, content, language, size) VALUES (?, ?, ?, ?, ?, ?)')
+          .bind(id, filesMatch[1], body.path, content, body.language || 'javascript', content.length).run();
+        await db.prepare("UPDATE rc_projects SET updated_at = datetime('now') WHERE id = ?").bind(filesMatch[1]).run();
+        return json({ ok: true, id, action: 'created' }, 201, origin);
+      }
+
+      if (filesMatch && method === 'GET') {
+        const files = await db.prepare('SELECT id, path, language, size, version, updated_at FROM rc_files WHERE project_id = ? ORDER BY path').bind(filesMatch[1]).all();
+        return json({ files: files.results || [] }, 200, origin);
+      }
+
+      // Single file
+      const fileMatch = path.match(/^\/api\/projects\/([^/]+)\/files\/(.+)$/);
+      if (fileMatch && method === 'GET') {
+        const file = await db.prepare('SELECT * FROM rc_files WHERE project_id = ? AND path = ?').bind(fileMatch[1], decodeURIComponent(fileMatch[2])).first();
+        if (!file) return json({ error: 'File not found' }, 404, origin);
+        return json({ file }, 200, origin);
+      }
+
+      if (fileMatch && method === 'DELETE') {
+        await db.prepare('DELETE FROM rc_files WHERE project_id = ? AND path = ?').bind(fileMatch[1], decodeURIComponent(fileMatch[2])).run();
+        return json({ ok: true }, 200, origin);
+      }
+
+      // AI Code Completion
+      if (path === '/api/ai/complete' && method === 'POST') {
+        const body = await request.json();
+        if (!body.code) return json({ error: 'code required' }, 400, origin);
+        try {
+          const result = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
+            messages: [
+              { role: 'system', content: 'You are a code completion assistant. Given partial code, complete it naturally. Return ONLY the completed code, no explanations.' },
+              { role: 'user', content: `Complete this ${body.language || 'javascript'} code:\n\n${body.code}` },
+            ],
+            max_tokens: 500,
+          });
+          return json({ completion: result.response, language: body.language }, 200, origin);
+        } catch { return json({ completion: '// AI completion unavailable', error: 'AI service unavailable' }, 200, origin); }
+      }
+
+      // AI Code Review (enhanced)
+      if (path === '/api/ai/review' && method === 'POST') {
+        const body = await request.json();
+        if (!body.code) return json({ error: 'code required' }, 400, origin);
+        try {
+          const result = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
+            messages: [
+              { role: 'system', content: 'You are a code reviewer. Analyze the code for bugs, security issues, performance problems, and style. Return a JSON object: {"issues": [{"type": "bug|security|performance|style", "line": number, "message": "..."}], "score": 1-10, "summary": "..."}. Return ONLY valid JSON.' },
+              { role: 'user', content: `Review this ${body.language || 'javascript'} code:\n\n${body.code}` },
+            ],
+            max_tokens: 800,
+          });
+          try { return json(JSON.parse(result.response), 200, origin); }
+          catch { return json({ summary: result.response, issues: [], score: 7 }, 200, origin); }
+        } catch { return json({ summary: 'AI review unavailable', issues: [], score: null }, 200, origin); }
+      }
+
+      // AI Code Explanation
+      if (path === '/api/ai/explain' && method === 'POST') {
+        const body = await request.json();
+        if (!body.code) return json({ error: 'code required' }, 400, origin);
+        try {
+          const result = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
+            messages: [
+              { role: 'system', content: 'Explain this code clearly and concisely. What does it do? How does it work? Any notable patterns?' },
+              { role: 'user', content: `Explain this ${body.language || 'javascript'} code:\n\n${body.code}` },
+            ],
+            max_tokens: 600,
+          });
+          return json({ explanation: result.response, language: body.language }, 200, origin);
+        } catch { return json({ explanation: 'AI explanation unavailable' }, 200, origin); }
+      }
+
+      // Deploy
+      if (path === '/api/deploy' && method === 'POST') {
+        const body = await request.json();
+        if (!body.project_id) return json({ error: 'project_id required' }, 400, origin);
+        const id = crypto.randomUUID();
+        const target = body.target || 'cloudflare';
+        await db.prepare('INSERT INTO rc_deploys (id, project_id, target, status) VALUES (?, ?, ?, ?)')
+          .bind(id, body.project_id, target, 'queued').run();
+        return json({ ok: true, deploy_id: id, project_id: body.project_id, target, status: 'queued' }, 201, origin);
+      }
+
+      if (path === '/api/deploys' && method === 'GET') {
+        const projectId = url.searchParams.get('project_id');
+        let q = 'SELECT * FROM rc_deploys';
+        const params = [];
+        if (projectId) { q += ' WHERE project_id = ?'; params.push(projectId); }
+        q += ' ORDER BY created_at DESC LIMIT 20';
+        const result = await db.prepare(q).bind(...params).all();
+        return json({ deploys: result.results || [] }, 200, origin);
+      }
+
+      // D1-backed snippets (replace in-memory)
+      if (path === '/api/snippets' && method === 'GET') {
+        const result = await db.prepare('SELECT * FROM rc_snippets WHERE is_public = 1 ORDER BY created_at DESC LIMIT 50').all();
+        return json({ snippets: result.results || [] }, 200, origin);
+      }
+
+      if (path === '/api/snippets' && method === 'POST') {
+        const body = await request.json();
+        if (!body.title || !body.code) return json({ error: 'title and code required' }, 400, origin);
+        const id = crypto.randomUUID();
+        await db.prepare('INSERT INTO rc_snippets (id, title, language, code, tags, owner) VALUES (?, ?, ?, ?, ?, ?)')
+          .bind(id, body.title, body.language || 'javascript', body.code, JSON.stringify(body.tags || []), body.owner || 'community').run();
+        return json({ ok: true, id }, 201, origin);
+      }
+
+      // Share project
+      const shareMatch = path.match(/^\/api\/projects\/([^/]+)\/share$/);
+      if (shareMatch && method === 'POST') {
+        await db.prepare('UPDATE rc_projects SET is_public = 1 WHERE id = ?').bind(shareMatch[1]).run();
+        return json({ ok: true, shared: shareMatch[1], url: `https://roadcode.blackroad.io/p/${shareMatch[1]}` }, 200, origin);
+      }
+
+      // Stats
+      if (path === '/api/stats') {
+        const projects = await db.prepare('SELECT COUNT(*) as c FROM rc_projects').first();
+        const files = await db.prepare('SELECT COUNT(*) as c FROM rc_files').first();
+        const totalSize = await db.prepare('SELECT COALESCE(SUM(size), 0) as s FROM rc_files').first();
+        const deploys = await db.prepare('SELECT COUNT(*) as c FROM rc_deploys').first();
+        const snippets = await db.prepare('SELECT COUNT(*) as c FROM rc_snippets').first();
+        return json({
+          projects: projects.c, files: files.c, total_lines: Math.round((totalSize.s || 0) / 40),
+          deploys: deploys.c, snippets: snippets.c,
+        }, 200, origin);
+      }
+    }
+
+    // Legacy API routes (in-memory fallback if no DB)
     if (path.startsWith('/api/')) {
       return handleAPI(path, request, origin);
     }

@@ -1,3 +1,15 @@
 name = "roadcode-blackroad"
 main = "src/worker.js"
 compatibility_date = "2026-03-31"
+
+[ai]
+binding = "AI"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "roadcode"
+database_id = "0d012743-ca7b-4268-a37c-6e2966fb4060"
+
+[[routes]]
+pattern = "roadcode.blackroad.io/*"
+zone_name = "blackroad.io"
