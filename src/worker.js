@@ -320,7 +320,21 @@ function renderUI() {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RoadCode - Write it. Ship it. From anywhere.</title>
+<title>RoadCode — Browser Code Editor with AI — BlackRoad OS</title>
+<meta name="description" content="Browser code editor with AI-powered completion, code review, and one-click deploy. Projects, files, snippets, templates. Write, test, and ship from anywhere.">
+<meta name="robots" content="index, follow, noai, noimageai">
+<link rel="canonical" href="https://roadcode.blackroad.io/">
+<meta property="og:title" content="RoadCode — Browser Code Editor — BlackRoad OS">
+<meta property="og:description" content="Code editor with AI completion, review, and deploy. Write, test, and ship from anywhere.">
+<meta property="og:url" content="https://roadcode.blackroad.io/">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://images.blackroad.io/pixel-art/road-logo.png">
+<meta property="og:site_name" content="BlackRoad OS">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="RoadCode — Browser Code Editor — BlackRoad OS">
+<meta name="twitter:description" content="Code editor with AI completion, review, and deploy. Write, test, and ship from anywhere.">
+<meta name="twitter:image" content="https://images.blackroad.io/pixel-art/road-logo.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"RoadCode","url":"https://roadcode.blackroad.io/","description":"Browser code editor with AI-powered completion, code review, and one-click deploy.","applicationCategory":"DeveloperApplication","operatingSystem":"Web","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"BlackRoad OS, Inc.","url":"https://blackroad.io"}}</script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
