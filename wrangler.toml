@@ -1,15 +1,18 @@
 name = "roadcode-blackroad"
-main = "src/worker.js"
-compatibility_date = "2026-03-31"
-
-[ai]
-binding = "AI"
-
-[[d1_databases]]
-binding = "DB"
-database_name = "roadcode"
-database_id = "0d012743-ca7b-4268-a37c-6e2966fb4060"
-
+main = "src/index.ts"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
 [[routes]]
 pattern = "roadcode.blackroad.io/*"
 zone_name = "blackroad.io"
+[vars]
+ENVIRONMENT = "production"
+SERVICE_NAME = "roadcode"
+VERSION = "2.0.0"
+[[kv_namespaces]]
+binding = "STORE"
+id = "e66e04e49e3844f7ba6bc50d6d76fb5c"
+[[d1_databases]]
+binding = "DB"
+database_name = "blackroad-os-main"
+database_id = "e2c6dcd9-c21a-48ac-8807-7b3a6881c4f7"
