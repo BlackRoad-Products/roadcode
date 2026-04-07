@@ -25,7 +25,7 @@ function page(): Response {
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-:root{--bg:#030303;--card:#0a0a0a;--border:#111;--text:#f0f0f0;--sub:#444;--green:#00E676;--grad:linear-gradient(135deg,#00E676,#3E84FF)}
+:root{--bg:#030303;--card:#0a0a0a;--border:#111;--text:#f0f0f0;--sub:#444;--green:#22c55e;--grad:linear-gradient(135deg,#22c55e,#3E84FF)}
 html,body{min-height:100vh;background:var(--bg);color:var(--text);font-family:'Space Grotesk',sans-serif;display:grid;grid-template-columns:280px 1fr;grid-template-rows:auto 1fr}
 .grad-bar{height:2px;background:var(--grad);grid-column:1/-1}
 .sidebar{border-right:1px solid var(--border);padding:20px;overflow-y:auto;grid-row:2}
