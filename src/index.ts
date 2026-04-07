@@ -13,8 +13,15 @@ const SNIPPETS = [
 
 function page(): Response {
   const html=`<!DOCTYPE html><html lang="en"><head>
-<meta charset="UTF-8"><title>RoadCode — BlackRoad IDE</title>
-<meta name="description" content="RoadCode — code editor and snippet library for BlackRoad OS.">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RoadCode — BlackRoad IDE</title>
+<meta name="description" content="Code editor and snippet library for BlackRoad OS. The .road language IDE.">
+<link rel="canonical" href="https://roadcode.blackroad.io/">
+<meta property="og:title" content="RoadCode — BlackRoad IDE">
+<meta property="og:description" content="Code editor and snippet library for BlackRoad OS. The .road language IDE.">
+<meta property="og:url" content="https://roadcode.blackroad.io/">
+<meta property="og:type" content="website">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"RoadCode","url":"https://roadcode.blackroad.io/","description":"Code editor and snippet library for BlackRoad OS. The .road language IDE.","applicationCategory":"DeveloperApplication","publisher":{"@type":"Organization","name":"BlackRoad OS, Inc.","url":"https://blackroad.io"}}</script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
