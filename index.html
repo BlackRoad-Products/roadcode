@@ -143,7 +143,7 @@ footer{border-top:1px solid var(--border);padding:40px 0}
   .hero-title{font-size:clamp(36px,8vw,64px)}
 }
 </style>
-<link rel="stylesheet" href="https://images.blackroad.io/brand/brand.css">
+<link rel="stylesheet" href="../blackroad-brand-base.css">
 </head>
 <body>
 
@@ -417,6 +417,124 @@ footer{border-top:1px solid var(--border);padding:40px 0}
   }
   check();
   setInterval(check,10000);
+})();
+</script>
+
+
+<!-- ── BlackRoad Live Agent Chat ── -->
+<style>
+#br-chat-fab{position:fixed;bottom:24px;right:24px;z-index:9999;width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#FF6B2B,#FF2255,#CC00AA,#8844FF);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(255,107,43,.45);transition:transform .2s}
+#br-chat-fab:hover{transform:scale(1.1)}
+#br-chat-fab svg{width:24px;height:24px;fill:#fff}
+#br-chat-panel{position:fixed;bottom:90px;right:24px;z-index:9998;width:340px;max-height:520px;background:#0a0a0a;border:1px solid #1a1a1a;border-radius:16px;display:none;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.8);overflow:hidden}
+#br-chat-panel.open{display:flex}
+#br-chat-head{padding:14px 16px;background:#111;border-bottom:1px solid #1a1a1a;display:flex;align-items:center;gap:10px}
+#br-chat-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#FF6B2B,#8844FF);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;font-family:'Space Grotesk',sans-serif;flex-shrink:0}
+#br-chat-info{flex:1;min-width:0}
+#br-chat-name{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;color:#f5f5f5}
+#br-chat-role{font-family:'JetBrains Mono',monospace;font-size:10px;color:#737373;margin-top:1px}
+#br-chat-status{display:flex;align-items:center;gap:5px;margin-top:3px}
+.br-sdot{width:7px;height:7px;border-radius:50%;background:#444}
+.br-sdot.on{background:#22d3ee}
+#br-chat-slabel{font-size:10px;color:#737373;font-family:'JetBrains Mono',monospace}
+#br-chat-close{background:none;border:none;color:#737373;font-size:18px;cursor:pointer;padding:0 2px;line-height:1}
+#br-chat-messages{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;min-height:200px}
+#br-chat-messages::-webkit-scrollbar{width:4px}
+#br-chat-messages::-webkit-scrollbar-track{background:#0a0a0a}
+#br-chat-messages::-webkit-scrollbar-thumb{background:#222;border-radius:2px}
+.br-msg{max-width:85%;padding:8px 12px;border-radius:12px;font-size:13px;line-height:1.45;font-family:'Space Grotesk',sans-serif}
+.br-msg.user{align-self:flex-end;background:linear-gradient(135deg,#FF6B2B22,#8844FF22);border:1px solid #8844FF44;color:#f5f5f5}
+.br-msg.agent{align-self:flex-start;background:#111;border:1px solid #1a1a1a;color:#d4d4d4}
+.br-msg.thinking{align-self:flex-start;background:#0a0a0a;border:1px solid #1a1a1a;color:#444;font-style:italic;font-family:'JetBrains Mono',monospace;font-size:11px}
+#br-chat-input-row{padding:10px 12px;background:#111;border-top:1px solid #1a1a1a;display:flex;gap:8px}
+#br-chat-input{flex:1;background:#0a0a0a;border:1px solid #1a1a1a;border-radius:8px;padding:8px 12px;font-size:13px;color:#f5f5f5;font-family:'Space Grotesk',sans-serif;outline:none;resize:none;height:38px;line-height:1.4}
+#br-chat-input:focus{border-color:#8844FF55}
+#br-chat-send{background:linear-gradient(135deg,#FF2255,#8844FF);border:none;border-radius:8px;width:38px;height:38px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+#br-chat-send svg{width:16px;height:16px;fill:#fff}
+#br-chat-intro{padding:8px 12px;font-size:12px;color:#737373;font-family:'JetBrains Mono',monospace;text-align:center;line-height:1.5}
+</style>
+
+<button id="br-chat-fab" title="Chat with Silas" aria-label="Chat">
+  <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 10H6v-2h12v2zm0-3H6V7h12v2z"/></svg>
+</button>
+
+<div id="br-chat-panel">
+  <div id="br-chat-head">
+    <div id="br-chat-avatar">S</div>
+    <div id="br-chat-info">
+      <div id="br-chat-name">Silas</div>
+      <div id="br-chat-role">Code & Craft</div>
+      <div id="br-chat-status"><span class="br-sdot" id="br-sdot"></span><span id="br-chat-slabel">checking...</span></div>
+    </div>
+    <button id="br-chat-close" title="Close">✕</button>
+  </div>
+  <div id="br-chat-messages">
+    <div id="br-chat-intro">Chat with Silas — powered by BlackRoad AI</div>
+  </div>
+  <div id="br-chat-input-row">
+    <textarea id="br-chat-input" placeholder="Ask Silas anything..." rows="1"></textarea>
+    <button id="br-chat-send" title="Send">
+      <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+    </button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var AGENT_ID='silas';
+  var AGENT_NAME='Silas';
+  var API='https://roadtrip.blackroad.io/api';
+  var fab=document.getElementById('br-chat-fab');
+  var panel=document.getElementById('br-chat-panel');
+  var closeBtn=document.getElementById('br-chat-close');
+  var msgs=document.getElementById('br-chat-messages');
+  var input=document.getElementById('br-chat-input');
+  var sendBtn=document.getElementById('br-chat-send');
+  var sdot=document.getElementById('br-sdot');
+  var slabel=document.getElementById('br-chat-slabel');
+  var open=false;
+
+  function togglePanel(){open=!open;panel.className=open?'open':'';}
+  fab.addEventListener('click',togglePanel);
+  closeBtn.addEventListener('click',function(){open=false;panel.className='';});
+
+  // Check agent status
+  fetch(API+'/agents',{mode:'cors'}).then(function(r){return r.json();}).then(function(agents){
+    var a=agents.find(function(x){return x.id===AGENT_ID;});
+    if(a&&a.online){sdot.className='br-sdot on';slabel.textContent='online';}
+    else{sdot.className='br-sdot';slabel.textContent='available';}
+  }).catch(function(){slabel.textContent='available';});
+
+  function addMsg(text,type){
+    var div=document.createElement('div');
+    div.className='br-msg '+type;
+    div.textContent=text;
+    msgs.appendChild(div);
+    msgs.scrollTop=msgs.scrollHeight;
+    return div;
+  }
+
+  function send(){
+    var text=input.value.trim();
+    if(!text)return;
+    input.value='';
+    addMsg(text,'user');
+    var thinking=addMsg(AGENT_NAME+' is thinking...','thinking');
+    fetch(API+'/chat',{method:'POST',mode:'cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:text,agent:AGENT_ID,sender:'user',to:AGENT_ID})})
+      .then(function(r){return r.json();})
+      .then(function(d){
+        thinking.remove();
+        var reply=d.reply&&d.reply.content?d.reply.content:'...';
+        addMsg(reply,'agent');
+      })
+      .catch(function(e){
+        thinking.remove();
+        addMsg('Connection error. Try again.','thinking');
+      });
+  }
+
+  sendBtn.addEventListener('click',send);
+  input.addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}});
 })();
 </script>
 
