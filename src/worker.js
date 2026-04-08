@@ -1570,6 +1570,17 @@ export default {
       return json({ shares: shares.results || [] }, 200, origin);
     }
 
+    // ─── RoadC Playground (from roadc-playground) ───
+    if (path === '/api/roadc/examples') {
+      return json({ examples: [
+        { id: 'hello', name: 'Hello World', code: 'print("Hello from RoadC!")\nprint("Born on BlackRoad")' },
+        { id: 'fibonacci', name: 'Fibonacci', code: 'fun fibonacci(n):\n    if n <= 1:\n        return n\n    return fibonacci(n-1) + fibonacci(n-2)\n\nlet i = 0\nwhile i <= 12:\n    print(fibonacci(i))\n    i = i + 1' },
+        { id: 'factorial', name: 'Factorial', code: 'fun factorial(n):\n    if n <= 1:\n        return 1\n    return n * factorial(n-1)\n\nprint(factorial(10))' },
+        { id: 'fizzbuzz', name: 'FizzBuzz', code: 'let i = 1\nwhile i <= 30:\n    if i % 15 == 0:\n        print("FizzBuzz")\n    else if i % 3 == 0:\n        print("Fizz")\n    else if i % 5 == 0:\n        print("Buzz")\n    else:\n        print(i)\n    i = i + 1' },
+        { id: 'gn', name: 'G(n) Calculator', code: 'fun gn(n):\n    return n ** (n+1) / (n+1) ** n\n\nlet i = 1\nwhile i <= 20:\n    print("G(" + i + ") = " + gn(i))\n    i = i + 1' },
+      ]}, 200, origin);
+    }
+
     // Legacy API routes (in-memory fallback if no DB)
     if (path.startsWith('/api/')) {
       return handleAPI(path, request, origin);
