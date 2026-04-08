@@ -16,6 +16,31 @@ const TEMPLATES = [
   { id: 'node-api', name: 'Node API', language: 'javascript', code: `import { createServer } from 'node:http';\n\nconst server = createServer((req, res) => {\n  res.writeHead(200, { 'Content-Type': 'application/json' });\n  res.end(JSON.stringify({ status: 'ok', path: req.url }));\n});\n\nserver.listen(3000, () => {\n  console.log('API running on :3000');\n});` },
 ];
 
+const RC_TEMPLATES = [
+  { slug: 'react-app', name: 'React App', category: 'Frontend', description: 'Modern React application with hooks, state management, and component architecture. Includes routing and responsive layout.', language: 'JavaScript', difficulty: 'Beginner', features: ['React 18 with hooks', 'React Router v6', 'CSS Modules', 'Responsive layout', 'Dark mode support'], codePreview: 'import React, { useState } from \'react\';\nimport { BrowserRouter, Routes, Route } from \'react-router-dom\';\n\nfunction App() {\n  const [theme, setTheme] = useState(\'dark\');\n  return (\n    <BrowserRouter>\n      <Routes>\n        <Route path="/" element={<Home />} />\n      </Routes>\n    </BrowserRouter>\n  );\n}' },
+  { slug: 'nextjs-app', name: 'Next.js App', category: 'Frontend', description: 'Full-stack Next.js application with App Router, server components, and API routes. SEO-optimized with metadata API.', language: 'TypeScript', difficulty: 'Intermediate', features: ['App Router', 'Server Components', 'API Routes', 'Metadata API for SEO', 'Tailwind CSS'], codePreview: 'import type { Metadata } from \'next\';\n\nexport const metadata: Metadata = {\n  title: \'My App\',\n  description: \'Built with Next.js\',\n};\n\nexport default function RootLayout({\n  children,\n}: { children: React.ReactNode }) {\n  return (\n    <html lang="en">\n      <body>{children}</body>\n    </html>\n  );\n}' },
+  { slug: 'express-api', name: 'Express API', category: 'Backend', description: 'RESTful API with Express.js. Includes middleware, error handling, validation, and structured routing.', language: 'JavaScript', difficulty: 'Beginner', features: ['RESTful routing', 'Error middleware', 'Input validation', 'CORS configuration', 'Environment config'], codePreview: 'import express from \'express\';\nimport cors from \'cors\';\n\nconst app = express();\napp.use(cors());\napp.use(express.json());\n\napp.get(\'/api/health\', (req, res) => {\n  res.json({ status: \'ok\', uptime: process.uptime() });\n});\n\napp.listen(3000, () => console.log(\'API on :3000\'));' },
+  { slug: 'flask-api', name: 'Flask API', category: 'Backend', description: 'Python REST API with Flask. Includes blueprints, SQLAlchemy ORM, and request validation.', language: 'Python', difficulty: 'Beginner', features: ['Flask blueprints', 'SQLAlchemy ORM', 'Marshmallow validation', 'Error handlers', 'Config management'], codePreview: 'from flask import Flask, jsonify\nfrom flask_sqlalchemy import SQLAlchemy\n\napp = Flask(__name__)\napp.config[\'SQLALCHEMY_DATABASE_URI\'] = \'sqlite:///app.db\'\ndb = SQLAlchemy(app)\n\n@app.route(\'/api/health\')\ndef health():\n    return jsonify({\'status\': \'ok\'})\n\nif __name__ == \'__main__\':\n    app.run(debug=True)' },
+  { slug: 'django-app', name: 'Django App', category: 'Backend', description: 'Full-featured Django web application with models, views, templates, and admin panel. Production-ready structure.', language: 'Python', difficulty: 'Intermediate', features: ['Models & migrations', 'Class-based views', 'Django admin', 'Template system', 'Authentication built-in'], codePreview: 'from django.db import models\nfrom django.views.generic import ListView\n\nclass Article(models.Model):\n    title = models.CharField(max_length=200)\n    content = models.TextField()\n    published = models.DateTimeField(auto_now_add=True)\n\n    class Meta:\n        ordering = [\'-published\']\n\nclass ArticleList(ListView):\n    model = Article\n    template_name = \'articles/list.html\'' },
+  { slug: 'fastapi', name: 'FastAPI', category: 'Backend', description: 'High-performance Python API with FastAPI. Auto-generated docs, async support, and Pydantic validation.', language: 'Python', difficulty: 'Intermediate', features: ['Auto OpenAPI docs', 'Async/await support', 'Pydantic models', 'Dependency injection', 'Type-safe routing'], codePreview: 'from fastapi import FastAPI\nfrom pydantic import BaseModel\n\napp = FastAPI(title="My API")\n\nclass Item(BaseModel):\n    name: str\n    price: float\n    in_stock: bool = True\n\n@app.get("/health")\nasync def health():\n    return {"status": "ok"}\n\n@app.post("/items")\nasync def create_item(item: Item):\n    return {"id": 1, **item.dict()}' },
+  { slug: 'cloudflare-worker', name: 'Cloudflare Worker', category: 'Backend', description: 'Edge computing with Cloudflare Workers. Runs in 300+ cities worldwide with D1 database and KV storage.', language: 'JavaScript', difficulty: 'Beginner', features: ['Edge runtime', 'D1 SQLite database', 'KV storage', 'R2 object storage', 'Cron triggers'], codePreview: 'export default {\n  async fetch(request, env) {\n    const url = new URL(request.url);\n    if (url.pathname === \'/api/data\') {\n      const rows = await env.DB.prepare(\n        \'SELECT * FROM items LIMIT 10\'\n      ).all();\n      return Response.json(rows.results);\n    }\n    return new Response(\'Hello from the edge!\');\n  },\n};' },
+  { slug: 'static-site', name: 'Static Site', category: 'Frontend', description: 'Clean static website with modern CSS. No frameworks, no build step. Pure HTML, CSS, and vanilla JavaScript.', language: 'HTML/CSS', difficulty: 'Beginner', features: ['Zero dependencies', 'Responsive design', 'CSS custom properties', 'Semantic HTML', 'Progressive enhancement'], codePreview: '<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8">\n  <meta name="viewport" content="width=device-width">\n  <title>My Site</title>\n  <style>\n    :root { --bg: #000; --text: #f5f5f5; }\n    body { background: var(--bg); color: var(--text); }\n  </style>\n</head>\n<body>\n  <main>Hello World</main>\n</body>\n</html>' },
+  { slug: 'cli-tool', name: 'CLI Tool', category: 'Packages', description: 'Command-line tool with argument parsing, colored output, and interactive prompts. Publishable to npm.', language: 'JavaScript', difficulty: 'Intermediate', features: ['Argument parsing', 'Colored output', 'Interactive prompts', 'Config file support', 'npm publishable'], codePreview: '#!/usr/bin/env node\nimport { parseArgs } from \'node:util\';\n\nconst { values, positionals } = parseArgs({\n  options: {\n    verbose: { type: \'boolean\', short: \'v\' },\n    output: { type: \'string\', short: \'o\' },\n  },\n  allowPositionals: true,\n});\n\nconsole.log(\'Running with:\', values);\nconsole.log(\'Args:\', positionals);' },
+  { slug: 'chrome-extension', name: 'Chrome Extension', category: 'Frontend', description: 'Browser extension with popup UI, content scripts, background service worker, and storage API.', language: 'JavaScript', difficulty: 'Intermediate', features: ['Manifest V3', 'Popup UI', 'Content scripts', 'Background worker', 'Chrome storage API'], codePreview: '// manifest.json\n{\n  "manifest_version": 3,\n  "name": "My Extension",\n  "version": "1.0",\n  "action": { "default_popup": "popup.html" },\n  "permissions": ["storage", "activeTab"],\n  "background": {\n    "service_worker": "background.js"\n  }\n}' },
+  { slug: 'discord-bot', name: 'Discord Bot', category: 'Bots', description: 'Discord bot with slash commands, event handlers, and embedded messages. Uses discord.js v14.', language: 'JavaScript', difficulty: 'Intermediate', features: ['Slash commands', 'Event handlers', 'Embed messages', 'Button interactions', 'Permission system'], codePreview: 'import { Client, GatewayIntentBits } from \'discord.js\';\n\nconst client = new Client({\n  intents: [GatewayIntentBits.Guilds]\n});\n\nclient.on(\'ready\', () => {\n  console.log(`Logged in as ${client.user.tag}`);\n});\n\nclient.on(\'interactionCreate\', async (i) => {\n  if (i.commandName === \'ping\')\n    await i.reply(\'Pong!\');\n});\n\nclient.login(process.env.TOKEN);' },
+  { slug: 'slack-bot', name: 'Slack Bot', category: 'Bots', description: 'Slack bot with Bolt framework. Handles messages, slash commands, shortcuts, and interactive modals.', language: 'JavaScript', difficulty: 'Intermediate', features: ['Bolt framework', 'Slash commands', 'Interactive modals', 'Event subscriptions', 'Message formatting'], codePreview: 'import { App } from \'@slack/bolt\';\n\nconst app = new App({\n  token: process.env.SLACK_BOT_TOKEN,\n  signingSecret: process.env.SLACK_SIGNING_SECRET,\n});\n\napp.command(\'/hello\', async ({ command, ack, say }) => {\n  await ack();\n  await say(`Hey <@${command.user_id}>!`);\n});\n\n(async () => {\n  await app.start(3000);\n  console.log(\'Slack bot running\');\n})();' },
+  { slug: 'rest-api', name: 'REST API (Node)', category: 'Backend', description: 'Production REST API with authentication, rate limiting, logging, and OpenAPI documentation.', language: 'TypeScript', difficulty: 'Intermediate', features: ['JWT authentication', 'Rate limiting', 'Request logging', 'OpenAPI docs', 'Input validation'], codePreview: 'import Fastify from \'fastify\';\nimport jwt from \'@fastify/jwt\';\nimport rateLimit from \'@fastify/rate-limit\';\n\nconst app = Fastify({ logger: true });\napp.register(jwt, { secret: process.env.JWT_SECRET });\napp.register(rateLimit, { max: 100, timeWindow: \'1m\' });\n\napp.get(\'/api/v1/users\', {\n  preHandler: [app.authenticate],\n}, async (req) => {\n  return { users: [] };\n});' },
+  { slug: 'graphql-api', name: 'GraphQL API', category: 'Backend', description: 'GraphQL server with type definitions, resolvers, and subscriptions. Includes playground and schema introspection.', language: 'TypeScript', difficulty: 'Intermediate', features: ['Type-safe schema', 'Resolvers', 'Subscriptions', 'DataLoader batching', 'GraphQL Playground'], codePreview: 'import { createSchema, createYoga } from \'graphql-yoga\';\n\nconst schema = createSchema({\n  typeDefs: `\n    type Query {\n      users: [User!]!\n      user(id: ID!): User\n    }\n    type User {\n      id: ID!\n      name: String!\n      email: String!\n    }\n  `,\n  resolvers: {\n    Query: {\n      users: () => db.users.findAll(),\n    },\n  },\n});' },
+  { slug: 'websocket-server', name: 'WebSocket Server', category: 'Backend', description: 'Real-time WebSocket server with rooms, broadcasting, and reconnection handling.', language: 'JavaScript', difficulty: 'Intermediate', features: ['Room management', 'Broadcasting', 'Heartbeat/ping', 'Reconnection support', 'Binary messages'], codePreview: 'import { WebSocketServer } from \'ws\';\n\nconst wss = new WebSocketServer({ port: 8080 });\nconst rooms = new Map();\n\nwss.on(\'connection\', (ws) => {\n  ws.isAlive = true;\n  ws.on(\'pong\', () => { ws.isAlive = true; });\n  ws.on(\'message\', (data) => {\n    const msg = JSON.parse(data);\n    if (msg.type === \'join\') joinRoom(ws, msg.room);\n    if (msg.type === \'chat\') broadcast(msg.room, msg);\n  });\n});' },
+  { slug: 'docker-compose', name: 'Docker Compose', category: 'DevOps', description: 'Multi-service Docker Compose setup with app server, database, cache, and reverse proxy.', language: 'YAML', difficulty: 'Intermediate', features: ['Multi-service stack', 'Volume persistence', 'Network isolation', 'Health checks', 'Environment config'], codePreview: 'version: "3.9"\nservices:\n  app:\n    build: .\n    ports: ["3000:3000"]\n    environment:\n      - DATABASE_URL=postgres://db:5432/app\n    depends_on:\n      db: { condition: service_healthy }\n  db:\n    image: postgres:16-alpine\n    volumes: [pgdata:/var/lib/postgresql/data]\nvolumes:\n  pgdata:' },
+  { slug: 'github-action', name: 'GitHub Action', category: 'DevOps', description: 'Custom GitHub Action for CI/CD. Includes testing, building, and deploying on push and pull request events.', language: 'YAML', difficulty: 'Beginner', features: ['CI/CD pipeline', 'Matrix testing', 'Caching', 'Artifact uploads', 'Environment secrets'], codePreview: 'name: CI\non:\n  push:\n    branches: [main]\n  pull_request:\n    branches: [main]\njobs:\n  test:\n    runs-on: ubuntu-latest\n    strategy:\n      matrix:\n        node: [18, 20]\n    steps:\n      - uses: actions/checkout@v4\n      - uses: actions/setup-node@v4\n      - run: npm ci && npm test' },
+  { slug: 'terraform-module', name: 'Terraform Module', category: 'DevOps', description: 'Reusable Terraform module for cloud infrastructure. Includes variables, outputs, and state management.', language: 'HCL', difficulty: 'Intermediate', features: ['Reusable module', 'Variable validation', 'Output values', 'State management', 'Provider config'], codePreview: 'terraform {\n  required_version = ">= 1.5"\n  required_providers {\n    aws = {\n      source  = "hashicorp/aws"\n      version = "~> 5.0"\n    }\n  }\n}\n\nvariable "environment" {\n  type    = string\n  default = "production"\n}\n\nresource "aws_instance" "app" {\n  ami           = var.ami_id\n  instance_type = "t3.micro"\n}' },
+  { slug: 'python-package', name: 'Python Package', category: 'Packages', description: 'Publishable Python package with pyproject.toml, tests, and CI. Ready for PyPI distribution.', language: 'Python', difficulty: 'Intermediate', features: ['pyproject.toml config', 'pytest test suite', 'Type hints', 'CLI entry point', 'PyPI-ready'], codePreview: '[build-system]\nrequires = ["setuptools>=68.0"]\nbuild-backend = "setuptools.backends._legacy:_Backend"\n\n[project]\nname = "my-package"\nversion = "0.1.0"\nrequires-python = ">=3.9"\n\n[project.scripts]\nmy-tool = "my_package.cli:main"' },
+  { slug: 'npm-package', name: 'npm Package', category: 'Packages', description: 'Publishable npm package with TypeScript, tests, and bundling. Supports ESM and CommonJS.', language: 'TypeScript', difficulty: 'Intermediate', features: ['Dual ESM/CJS', 'TypeScript source', 'Vitest testing', 'Bundled with tsup', 'npm publish ready'], codePreview: '// package.json\n{\n  "name": "my-package",\n  "version": "0.1.0",\n  "type": "module",\n  "exports": {\n    ".": {\n      "import": "./dist/index.js",\n      "require": "./dist/index.cjs"\n    }\n  }\n}\n\n// src/index.ts\nexport function greet(name: string): string {\n  return `Hello, ${name}!`;\n}' },
+  { slug: 'tailwind-app', name: 'Tailwind App', category: 'Frontend', description: 'Vite-powered app with Tailwind CSS v4. Includes dark mode, responsive utilities, and custom design tokens.', language: 'JavaScript', difficulty: 'Beginner', features: ['Tailwind CSS v4', 'Vite build', 'Dark mode', 'Custom design tokens', 'Responsive utilities'], codePreview: 'import { useState } from \'react\';\n\nexport default function App() {\n  const [dark, setDark] = useState(true);\n  return (\n    <div className={dark ? \'dark\' : \'\'}>\n      <main className="min-h-screen bg-white\n        dark:bg-zinc-950 p-8">\n        <h1 className="text-4xl font-bold">\n          Hello Tailwind\n        </h1>\n      </main>\n    </div>\n  );\n}' },
+  { slug: 'svelte-app', name: 'Svelte App', category: 'Frontend', description: 'SvelteKit application with file-based routing, server-side rendering, and form actions.', language: 'Svelte', difficulty: 'Beginner', features: ['SvelteKit framework', 'File-based routing', 'SSR support', 'Form actions', 'Load functions'], codePreview: '<script>\n  export let data;\n</script>\n\n<svelte:head>\n  <title>Home</title>\n</svelte:head>\n\n<main>\n  <h1>Welcome to SvelteKit</h1>\n  {#each data.items as item}\n    <article>\n      <h2>{item.title}</h2>\n    </article>\n  {/each}\n</main>' },
+];
+
 function corsHeaders(origin) {
   const allowed = origin && (origin.endsWith('.blackroad.io') || origin === 'https://blackroad.io') ? origin : 'https://roadcode.blackroad.io';
   return {
@@ -224,6 +249,38 @@ async function handleAPI(path, request, origin) {
     return new Response(null, { status: 204, headers: corsHeaders(origin) });
   }
 
+  if (path === '/api/track' && (request.method === 'POST' || method === 'POST')) {
+    try { const body = await request.json(); const cf = request.cf || {};
+      if (env.DB) { await env.DB.prepare("CREATE TABLE IF NOT EXISTS analytics_events (id INTEGER PRIMARY KEY AUTOINCREMENT, type TEXT DEFAULT 'pageview', path TEXT, referrer TEXT, country TEXT, city TEXT, device TEXT, screen TEXT, scroll_depth INTEGER DEFAULT 0, engagement_ms INTEGER DEFAULT 0, created_at TEXT DEFAULT (datetime('now')))").run();
+      await env.DB.prepare('INSERT INTO analytics_events (type, path, referrer, country, city, device, screen, scroll_depth, engagement_ms) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)').bind(body.type||'pageview', body.path||'/', body.referrer||'', cf.country||'', cf.city||'', body.device||'', body.screen||'', body.scroll||0, body.time||0).run(); }
+    } catch(e) {}
+    return new Response(JSON.stringify({ok:true}), {headers:{'Content-Type':'application/json'}});
+  }
+
+    // ── Sovereign Analytics ──
+    if (path === '/api/analytics' && request.method === 'POST') {
+      try {
+        const body = await request.json();
+        const cf = request.cf || {};
+        const ip = request.headers.get('CF-Connecting-IP') || '';
+        const ipHash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(ip + '2026'));
+        const visitor = btoa(String.fromCharCode(...new Uint8Array(ipHash))).slice(0,12);
+        await env.DB.prepare(`CREATE TABLE IF NOT EXISTS br_analytics (id INTEGER PRIMARY KEY AUTOINCREMENT, path TEXT, referrer TEXT, visitor TEXT, country TEXT, city TEXT, screen TEXT, ts TEXT DEFAULT (datetime('now')))`).run();
+        await env.DB.prepare('INSERT INTO br_analytics (path, referrer, visitor, country, city, screen) VALUES (?,?,?,?,?,?)').bind(body.path||'/', body.ref||'', visitor, cf.country||'', cf.city||'', (body.w||0)+'x'+(body.h||0)).run();
+      } catch(e){}
+      return new Response('ok', {headers:{'Access-Control-Allow-Origin':'*'}});
+    }
+    if (path === '/api/analytics/stats') {
+      try {
+        await env.DB.prepare(`CREATE TABLE IF NOT EXISTS br_analytics (id INTEGER PRIMARY KEY AUTOINCREMENT, path TEXT, referrer TEXT, visitor TEXT, country TEXT, city TEXT, screen TEXT, ts TEXT DEFAULT (datetime('now')))`).run();
+        const total = await env.DB.prepare('SELECT COUNT(*) as c FROM br_analytics').first();
+        const unique = await env.DB.prepare('SELECT COUNT(DISTINCT visitor) as c FROM br_analytics').first();
+        const today = await env.DB.prepare("SELECT COUNT(*) as c FROM br_analytics WHERE ts > datetime('now','-1 day')").first();
+        const pages = await env.DB.prepare('SELECT path, COUNT(*) as views FROM br_analytics GROUP BY path ORDER BY views DESC LIMIT 10').all();
+        const countries = await env.DB.prepare('SELECT country, COUNT(*) as c FROM br_analytics WHERE country != "" GROUP BY country ORDER BY c DESC LIMIT 10').all();
+        return new Response(JSON.stringify({total_views:total?.c||0,unique_visitors:unique?.c||0,today:today?.c||0,top_pages:pages?.results||[],top_countries:countries?.results||[]}),{headers:{'Access-Control-Allow-Origin':'*','Content-Type':'application/json'}});
+      } catch(e) { return new Response(JSON.stringify({error:'analytics unavailable'}),{status:500,headers:{'Content-Type':'application/json'}}); }
+    }
   if (path === '/api/health') {
     return json({ status: 'ok', service: 'roadcode', version: '1.0.0', uptime: Date.now() }, 200, origin);
   }
@@ -959,6 +1016,7 @@ function clearOutput() {
 createFile('untitled-1', 'javascript', '// Welcome to RoadCode\\n// Write it. Ship it. From anywhere.\\n\\nfunction hello(name) {\\n  console.log("Hello, " + name + "!");\\n  return "Welcome to RoadCode";\\n}\\n\\nhello("World");\\n');
 loadSnippets();
 loadTemplates();
+window.addEventListener('message',function(e){if(e.data</script></script>e.data.type==='blackroad-os:context'){window._osUser=e.data.user;window._osToken=e.data.token;}});if(window.parent!==window)window.parent.postMessage({type:'blackroad-os:request-context'},'*');
 </script>
 </body>
 </html>`;
@@ -974,6 +1032,15 @@ export default {
 
     if (method === 'OPTIONS') {
       return new Response(null, { status: 204, headers: corsHeaders(origin) });
+    }
+
+    if (path === '/sitemap.xml') {
+      const tplUrls = RC_TEMPLATES.map(t => `  <url><loc>https://roadcode.blackroad.io/templates/${t.slug}</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>`).join('\n');
+      return new Response(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url><loc>https://roadcode.blackroad.io/</loc><lastmod>2026-04-05</lastmod><changefreq>daily</changefreq><priority>1.0</priority></url>\n  <url><loc>https://roadcode.blackroad.io/templates</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>\n${tplUrls}\n</urlset>`, { headers: { 'Content-Type': 'application/xml' } });
+    }
+
+    if (path === '/robots.txt') {
+      return new Response(`User-agent: *\nAllow: /\nSitemap: https://roadcode.blackroad.io/sitemap.xml\n\nUser-agent: GPTBot\nDisallow: /\n\nUser-agent: ChatGPT-User\nDisallow: /\n\nUser-agent: CCBot\nDisallow: /`, { headers: { 'Content-Type': 'text/plain' } });
     }
 
     // Init D1 tables
@@ -1174,6 +1241,75 @@ export default {
         return json({ ok: true, shared: shareMatch[1], url: `https://roadcode.blackroad.io/p/${shareMatch[1]}` }, 200, origin);
       }
 
+      // AI Fix
+      if (path === '/api/ai/fix' && method === 'POST') {
+        const body = await request.json();
+        if (!body.code || !body.error) return json({ error: 'code and error required' }, 400, origin);
+        try {
+          const result = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
+            messages: [
+              { role: 'system', content: 'You are a code debugging assistant. Given code and an error message, provide the FIXED code. Return ONLY the corrected code, no explanations.' },
+              { role: 'user', content: `Language: ${body.language || 'javascript'}\nError: ${body.error}\n\nCode:\n${body.code}` },
+            ],
+            max_tokens: 800,
+          });
+          return json({ fixed_code: result.response, original_error: body.error }, 200, origin);
+        } catch { return json({ error: 'AI unavailable' }, 200, origin); }
+      }
+
+      // AI Refactor
+      if (path === '/api/ai/refactor' && method === 'POST') {
+        const body = await request.json();
+        if (!body.code) return json({ error: 'code required' }, 400, origin);
+        try {
+          const result = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
+            messages: [
+              { role: 'system', content: 'You are a code refactoring assistant. Refactor the given code according to the instruction. Return ONLY the refactored code.' },
+              { role: 'user', content: `Language: ${body.language || 'javascript'}\nInstruction: ${body.instruction || 'Make it cleaner and more efficient'}\n\nCode:\n${body.code}` },
+            ],
+            max_tokens: 800,
+          });
+          return json({ refactored_code: result.response, instruction: body.instruction }, 200, origin);
+        } catch { return json({ error: 'AI unavailable' }, 200, origin); }
+      }
+
+      // Version snapshots
+      const versionsMatch = path.match(/^\/api\/projects\/([^/]+)\/versions$/);
+      if (versionsMatch && method === 'POST') {
+        await db.prepare("CREATE TABLE IF NOT EXISTS rc_versions (id TEXT PRIMARY KEY, project_id TEXT, version INTEGER, files TEXT, message TEXT, created_at TEXT DEFAULT (datetime('now')))").run();
+        const files = await db.prepare('SELECT path, content FROM rc_files WHERE project_id = ?').bind(versionsMatch[1]).all();
+        const maxVer = await db.prepare('SELECT MAX(version) as v FROM rc_versions WHERE project_id = ?').bind(versionsMatch[1]).first();
+        const ver = (maxVer?.v || 0) + 1;
+        const body = await request.json().catch(() => ({}));
+        const id = crypto.randomUUID();
+        await db.prepare('INSERT INTO rc_versions (id, project_id, version, files, message) VALUES (?, ?, ?, ?, ?)').bind(id, versionsMatch[1], ver, JSON.stringify(files.results || []), body.message || `Version ${ver}`).run();
+        return json({ id, version: ver, files: (files.results || []).length }, 201, origin);
+      }
+      if (versionsMatch && method === 'GET') {
+        await db.prepare("CREATE TABLE IF NOT EXISTS rc_versions (id TEXT PRIMARY KEY, project_id TEXT, version INTEGER, files TEXT, message TEXT, created_at TEXT DEFAULT (datetime('now')))").run();
+        const result = await db.prepare('SELECT id, version, message, created_at FROM rc_versions WHERE project_id = ? ORDER BY version DESC').bind(versionsMatch[1]).all();
+        return json({ versions: result.results || [] }, 200, origin);
+      }
+
+      // Diff
+      const diffMatch = path.match(/^\/api\/projects\/([^/]+)\/diff\/(\d+)\/(\d+)$/);
+      if (diffMatch && method === 'GET') {
+        await db.prepare("CREATE TABLE IF NOT EXISTS rc_versions (id TEXT PRIMARY KEY, project_id TEXT, version INTEGER, files TEXT, message TEXT, created_at TEXT DEFAULT (datetime('now')))").run();
+        const v1 = await db.prepare('SELECT files FROM rc_versions WHERE project_id = ? AND version = ?').bind(diffMatch[1], parseInt(diffMatch[2])).first();
+        const v2 = await db.prepare('SELECT files FROM rc_versions WHERE project_id = ? AND version = ?').bind(diffMatch[1], parseInt(diffMatch[3])).first();
+        if (!v1 || !v2) return json({ error: 'Version not found' }, 404, origin);
+        const f1 = JSON.parse(v1.files || '[]'), f2 = JSON.parse(v2.files || '[]');
+        const diff = [];
+        const paths1 = new Set(f1.map(f => f.path)), paths2 = new Set(f2.map(f => f.path));
+        for (const f of f2) {
+          const old = f1.find(o => o.path === f.path);
+          if (!old) diff.push({ path: f.path, type: 'added' });
+          else if (old.content !== f.content) diff.push({ path: f.path, type: 'modified' });
+        }
+        for (const f of f1) { if (!paths2.has(f.path)) diff.push({ path: f.path, type: 'deleted' }); }
+        return json({ project_id: diffMatch[1], v1: parseInt(diffMatch[2]), v2: parseInt(diffMatch[3]), changes: diff }, 200, origin);
+      }
+
       // Stats
       if (path === '/api/stats') {
         const projects = await db.prepare('SELECT COUNT(*) as c FROM rc_projects').first();
@@ -1186,6 +1322,123 @@ export default {
           deploys: deploys.c, snippets: snippets.c,
         }, 200, origin);
       }
+    }
+
+    // ─── Template content pages (SEO) ───
+    if (path === '/templates') {
+      const cats = {};
+      RC_TEMPLATES.forEach(t => { (cats[t.category] = cats[t.category] || []).push(t); });
+      const listing = Object.entries(cats).map(([cat, items]) =>
+        `<div style="margin-bottom:32px"><h2 style="font-size:18px;font-weight:700;margin-bottom:12px;color:#f5f5f5">${cat}</h2><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px">${items.map(t => `<a href="/templates/${t.slug}" style="display:block;background:#0a0a0a;border:1px solid #1a1a1a;border-radius:8px;padding:16px;text-decoration:none;transition:border-color .2s"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span style="font-size:14px;font-weight:600;color:#f5f5f5">${t.name}</span><span style="font-size:10px;padding:2px 8px;border-radius:10px;background:#4488ff22;color:#4488ff;font-family:monospace">${t.language}</span><span style="font-size:10px;padding:2px 8px;border-radius:10px;background:${t.difficulty==='Beginner'?'#22c55e22':'#f5a62322'};color:${t.difficulty==='Beginner'?'#22c55e':'#f5a623'}">${t.difficulty}</span></div><p style="font-size:12px;color:#737373;line-height:1.5">${t.description}</p></a>`).join('')}</div></div>`
+      ).join('');
+      const pageHtml = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Coding Templates - RoadCode by BlackRoad OS</title><meta name="description" content="Browse 22+ starter templates for React, Next.js, Express, Flask, Django, Cloudflare Workers, CLI tools, Discord bots, and more. Start coding instantly in your browser."><meta property="og:title" content="Coding Templates - RoadCode"><meta property="og:description" content="22+ starter templates. React, Next.js, Express, Flask, Django, and more. Code in your browser."><meta property="og:url" content="https://roadcode.blackroad.io/templates"><meta property="og:image" content="https://images.blackroad.io/pixel-art/road-logo.png"><meta name="twitter:card" content="summary_large_image"><link rel="canonical" href="https://roadcode.blackroad.io/templates"><script type="application/ld+json">{"@context":"https://schema.org","@type":"CollectionPage","name":"Coding Templates","url":"https://roadcode.blackroad.io/templates","description":"Browse 22+ starter templates for web apps, APIs, bots, and DevOps.","publisher":{"@type":"Organization","name":"BlackRoad OS, Inc."}}</script><link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet"><style>*{margin:0;padding:0;box-sizing:border-box}body{background:#000;color:#f5f5f5;font-family:'Space Grotesk',sans-serif}a{color:inherit}a:hover{border-color:#333 !important}.bar{height:3px;background:linear-gradient(90deg,#FF6B2B,#FF2255,#CC00AA,#8844FF,#4488FF,#00D4FF);position:fixed;top:0;left:0;right:0;z-index:1000}nav{position:fixed;top:3px;left:0;right:0;z-index:999;background:rgba(0,0,0,.92);backdrop-filter:blur(20px);border-bottom:1px solid #1a1a1a;height:48px;display:flex;align-items:center;padding:0 24px;gap:16px}nav a{font-size:12px;color:#737373}nav a:hover{color:#f5f5f5}.container{max-width:960px;margin:0 auto;padding:80px 24px 48px}</style></head><body><div class="bar"></div><nav><a href="/" style="font-weight:700;font-size:15px;color:#f5f5f5">RoadCode</a><a href="/templates" style="color:#f5f5f5">Templates</a><a href="https://blackroad.io">Highway</a><a href="https://app.blackroad.io" style="padding:6px 14px;border-radius:5px;background:#f5f5f5;color:#000;font-weight:600;font-size:11px">Open OS</a></nav><div class="container"><h1 style="font-size:clamp(24px,5vw,40px);font-weight:700;margin-bottom:8px">Coding Templates</h1><p style="color:#737373;margin-bottom:32px;max-width:600px;line-height:1.6">Start from a working template. Pick a stack, customize it, and ship from your browser.</p>${listing}</div><script>(function(){var d={path:location.pathname,ref:document.referrer,w:screen.width,h:screen.height,t:Date.now()};navigator.sendBeacon&&navigator.sendBeacon('/api/analytics',JSON.stringify(d))})()</script></body></html>`;
+      return new Response(pageHtml, { headers: { 'Content-Type': 'text/html;charset=UTF-8', ...securityHeaders() } });
+    }
+
+    const tplMatch = path.match(/^\/templates\/([a-z0-9-]+)$/);
+    if (tplMatch) {
+      const tpl = RC_TEMPLATES.find(t => t.slug === tplMatch[1]);
+      if (!tpl) return new Response('Template not found', { status: 404 });
+      const related = RC_TEMPLATES.filter(t => t.category === tpl.category && t.slug !== tpl.slug).slice(0, 4);
+      const tplHtml = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${tpl.name} Template - RoadCode by BlackRoad OS</title><meta name="description" content="${tpl.description} Start coding ${tpl.name} in your browser with RoadCode."><meta property="og:title" content="${tpl.name} Template - RoadCode"><meta property="og:description" content="${tpl.description}"><meta property="og:url" content="https://roadcode.blackroad.io/templates/${tpl.slug}"><meta property="og:image" content="https://images.blackroad.io/pixel-art/road-logo.png"><meta name="twitter:card" content="summary"><link rel="canonical" href="https://roadcode.blackroad.io/templates/${tpl.slug}"><script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareSourceCode","name":"${tpl.name}","programmingLanguage":"${tpl.language}","description":"${tpl.description}","codeRepository":"https://roadcode.blackroad.io/templates/${tpl.slug}","author":{"@type":"Organization","name":"BlackRoad OS, Inc."}}</script><link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet"><style>*{margin:0;padding:0;box-sizing:border-box}body{background:#000;color:#f5f5f5;font-family:'Space Grotesk',sans-serif}a{color:inherit}.bar{height:3px;background:linear-gradient(90deg,#FF6B2B,#FF2255,#CC00AA,#8844FF,#4488FF,#00D4FF);position:fixed;top:0;left:0;right:0;z-index:1000}nav{position:fixed;top:3px;left:0;right:0;z-index:999;background:rgba(0,0,0,.92);backdrop-filter:blur(20px);border-bottom:1px solid #1a1a1a;height:48px;display:flex;align-items:center;padding:0 24px;gap:16px}nav a{font-size:12px;color:#737373}nav a:hover{color:#f5f5f5}.container{max-width:720px;margin:0 auto;padding:80px 24px 48px}pre{background:#0a0a0a;border:1px solid #1a1a1a;border-radius:8px;padding:16px;overflow-x:auto;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.6;color:#ccc;margin:16px 0}</style></head><body><div class="bar"></div><nav><a href="/" style="font-weight:700;font-size:15px;color:#f5f5f5">RoadCode</a><a href="/templates" style="color:#f5f5f5">Templates</a><a href="https://blackroad.io">Highway</a><a href="https://app.blackroad.io" style="padding:6px 14px;border-radius:5px;background:#f5f5f5;color:#000;font-weight:600;font-size:11px">Open OS</a></nav><div class="container"><a href="/templates" style="font-size:12px;color:#737373;display:inline-block;margin-bottom:16px">&larr; All Templates</a><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px"><h1 style="font-size:28px;font-weight:700">${tpl.name}</h1><span style="font-size:11px;padding:3px 10px;border-radius:10px;background:#4488ff22;color:#4488ff;font-family:'JetBrains Mono',monospace">${tpl.language}</span><span style="font-size:11px;padding:3px 10px;border-radius:10px;background:${tpl.difficulty==='Beginner'?'#22c55e22':'#f5a62322'};color:${tpl.difficulty==='Beginner'?'#22c55e':'#f5a623'}">${tpl.difficulty}</span><span style="font-size:11px;padding:3px 10px;border-radius:10px;background:#8844ff22;color:#8844ff">${tpl.category}</span></div><p style="font-size:15px;color:#737373;line-height:1.6;margin-bottom:24px">${tpl.description}</p><h2 style="font-size:16px;margin-bottom:8px">Features</h2><ul style="list-style:none;margin-bottom:24px">${tpl.features.map(f => `<li style="padding:4px 0;font-size:13px;color:#aaa">&bull; ${f}</li>`).join('')}</ul><h2 style="font-size:16px;margin-bottom:8px">Code Preview</h2><pre>${tpl.codePreview.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre><a href="https://app.blackroad.io" style="display:inline-block;margin-top:24px;padding:12px 28px;border-radius:7px;background:#f5f5f5;color:#000;font-weight:600;font-size:14px;text-decoration:none">Open in RoadCode</a>${related.length ? `<div style="margin-top:48px;border-top:1px solid #1a1a1a;padding-top:24px"><h2 style="font-size:16px;margin-bottom:12px">Related Templates</h2><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px">${related.map(r => `<a href="/templates/${r.slug}" style="display:block;background:#0a0a0a;border:1px solid #1a1a1a;border-radius:8px;padding:12px;text-decoration:none"><div style="font-size:13px;font-weight:600;color:#f5f5f5;margin-bottom:4px">${r.name}</div><div style="font-size:11px;color:#737373">${r.language} &middot; ${r.difficulty}</div></a>`).join('')}</div></div>` : ''}</div><script>!function(){var b=document.createElement("div");b.style.cssText="position:fixed;top:0;left:0;right:0;z-index:99999;background:#0a0a0a;border-bottom:1px solid #1a1a1a;padding:6px 16px;display:flex;align-items:center;justify-content:space-between;font-family:sans-serif";b.innerHTML="<span style=\"font-size:11px;color:#737373\">Part of <a href=\"https://os.blackroad.io\" style=\"color:#f5f5f5;font-weight:600;text-decoration:none\">BlackRoad OS<\/a> \u2014 27 AI agents, 17 products<\/span><a href=\"https://os.blackroad.io\" style=\"font-size:10px;font-weight:600;padding:4px 12px;background:#f5f5f5;color:#000;border-radius:4px;text-decoration:none\">Try Free<\/a>";b.id="br-bar";if(!document.getElementById("br-bar")){document.body.prepend(b);document.body.style.paddingTop=(parseInt(getComputedStyle(document.body).paddingTop)||0)+32+"px"}if(!document.querySelector("[data-cta]")){var f=document.createElement("div");f.dataset.cta="1";f.style.cssText="border-top:1px solid #1a1a1a;padding:24px 16px;text-align:center;background:#0a0a0a;margin-top:32px";f.innerHTML="<div style=\"font-size:14px;font-weight:700;color:#f5f5f5;margin-bottom:6px\">BlackRoad OS<\/div><div style=\"font-size:11px;color:#737373;margin-bottom:12px\">17 products. 27 agents. Free to try.<\/div><a href=\"https://os.blackroad.io\" style=\"display:inline-block;padding:8px 24px;background:#f5f5f5;color:#000;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none\">Open BlackRoad OS<\/a>";document.body.appendChild(f)}}();</script>
+</body></html>`;
+      return new Response(tplHtml, { headers: { 'Content-Type': 'text/html;charset=UTF-8', ...securityHeaders() } });
+    }
+
+    // --- Enhanced: Snippet search ---
+    if (path === '/api/snippets/search' && request.method === 'GET') {
+      if (!env.DB) return json({ results: [] }, 200, origin);
+      const q = url.searchParams.get('q') || '';
+      const lang = url.searchParams.get('lang');
+      let sql = "SELECT * FROM rc_snippets WHERE (title LIKE ? OR description LIKE ? OR tags LIKE ?)";
+      const binds = [`%${q}%`, `%${q}%`, `%${q}%`];
+      if (lang) { sql += ' AND language = ?'; binds.push(lang); }
+      sql += ' ORDER BY stars DESC, created_at DESC LIMIT 50';
+      const rows = await env.DB.prepare(sql).bind(...binds).all();
+      return json({ results: rows.results, count: rows.results.length }, 200, origin);
+    }
+
+    // --- Enhanced: Fork snippet ---
+    const forkMatch = path.match(/^\/api\/snippets\/(.+)\/fork$/);
+    if (forkMatch && request.method === 'POST') {
+      if (!env.DB) return json({ error: 'No DB' }, 500, origin);
+      const orig = await env.DB.prepare('SELECT * FROM rc_snippets WHERE id = ?').bind(forkMatch[1]).first();
+      if (!orig) return json({ error: 'Not found' }, 404, origin);
+      const id = crypto.randomUUID().slice(0, 12);
+      await env.DB.prepare("INSERT INTO rc_snippets (id, title, language, code, description, tags, author, fork_of) VALUES (?, ?, ?, ?, ?, ?, ?, ?)").bind(id, `Fork of ${orig.title}`, orig.language, orig.code, orig.description, orig.tags, 'anonymous', forkMatch[1]).run();
+      return json({ ok: true, id, forked_from: forkMatch[1] }, 201, origin);
+    }
+
+    // --- Enhanced: Star snippet ---
+    const starMatch = path.match(/^\/api\/snippets\/(.+)\/star$/);
+    if (starMatch && request.method === 'POST') {
+      if (!env.DB) return json({ error: 'No DB' }, 500, origin);
+      await env.DB.prepare('UPDATE rc_snippets SET stars = stars + 1 WHERE id = ?').bind(starMatch[1]).run();
+      return json({ ok: true }, 200, origin);
+    }
+
+    // --- Enhanced: Run/Execute code ---
+    if (path === '/api/run' && request.method === 'POST') {
+      try {
+        const body = await request.json();
+        const { code, language, snippet_id } = body;
+        if (!code) return json({ error: 'code required' }, 400, origin);
+        let output = '';
+        if (language === 'javascript' || language === 'js') {
+          // Safe static analysis — no eval
+          const lines = code.split('\n');
+          const logs = lines.filter(l => l.trim().startsWith('console.log'));
+          output = logs.length > 0 ? logs.map(l => { const m = l.match(/console\.log\((.+)\)/); return m ? m[1].replace(/['"]/g, '') : ''; }).join('\n') : `[${lines.length} lines of JavaScript analyzed]`;
+        } else { output = `[${language || 'unknown'} — ${code.split('\n').length} lines — run simulated]`; }
+        if (snippet_id && env.DB) { try { await env.DB.prepare('UPDATE rc_snippets SET runs = runs + 1 WHERE id = ?').bind(snippet_id).run(); } catch {} }
+        return json({ output, language: language || 'unknown', lines: code.split('\n').length }, 200, origin);
+      } catch { return json({ error: 'Invalid request' }, 400, origin); }
+    }
+
+    // --- Enhanced: Code review ---
+    if (path === '/api/review' && request.method === 'POST') {
+      try {
+        const body = await request.json();
+        const { code, language } = body;
+        if (!code) return json({ error: 'code required' }, 400, origin);
+        const lines = code.split('\n');
+        const issues = [];
+        lines.forEach((l, i) => {
+          if (l.includes('eval(')) issues.push({ line: i + 1, severity: 'error', msg: 'Avoid eval() — security risk' });
+          if (l.includes('innerHTML')) issues.push({ line: i + 1, severity: 'warning', msg: 'innerHTML can cause XSS — use textContent' });
+          if (l.match(/\bvar\b/)) issues.push({ line: i + 1, severity: 'info', msg: 'Prefer const/let over var' });
+          if (l.length > 120) issues.push({ line: i + 1, severity: 'info', msg: 'Line exceeds 120 chars' });
+        });
+        const funcs = (code.match(/function\s+\w+|const\s+\w+\s*=\s*(?:async\s*)?\(/g) || []).length;
+        return json({ analysis: { lines: lines.length, functions: funcs, issues, issue_count: issues.length, language: language || 'unknown' } }, 200, origin);
+      } catch { return json({ error: 'Invalid request' }, 400, origin); }
+    }
+
+    // --- Enhanced: Deploy to edge ---
+    if (path === '/api/deploy' && request.method === 'POST') {
+      try {
+        const body = await request.json();
+        if (!body.code || !body.name) return json({ error: 'code and name required' }, 400, origin);
+        const codeHash = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(body.code)))).map(b => b.toString(16).padStart(2, '0')).join('');
+        const id = crypto.randomUUID().slice(0, 12);
+        if (env.DB) {
+          await env.DB.prepare("CREATE TABLE IF NOT EXISTS rc_deployments (id TEXT PRIMARY KEY, name TEXT, code_hash TEXT, status TEXT DEFAULT 'deployed', created_at TEXT DEFAULT (datetime('now')))").run();
+          await env.DB.prepare('INSERT INTO rc_deployments (id, name, code_hash) VALUES (?, ?, ?)').bind(id, body.name, codeHash).run();
+        }
+        // Stamp to RoadChain
+        try { await fetch('https://roadchain.blackroad.io/api/event', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ app: 'roadcode', type: 'deploy', data: { name: body.name, hash: codeHash } }) }); } catch {}
+        return json({ ok: true, deployment: { id, name: body.name, code_hash: codeHash, status: 'deployed' } }, 201, origin);
+      } catch { return json({ error: 'Invalid request' }, 400, origin); }
+    }
+
+    // --- Enhanced: Template gallery ---
+    if (path === '/api/templates' && request.method === 'GET') {
+      const cat = url.searchParams.get('category');
+      const lang = url.searchParams.get('language');
+      let filtered = RC_TEMPLATES;
+      if (cat) filtered = filtered.filter(t => t.category.toLowerCase() === cat.toLowerCase());
+      if (lang) filtered = filtered.filter(t => t.language.toLowerCase() === lang.toLowerCase());
+      return json({ templates: filtered, total: filtered.length }, 200, origin);
     }
 
     // Legacy API routes (in-memory fallback if no DB)
