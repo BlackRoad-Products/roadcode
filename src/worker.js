@@ -1441,6 +1441,135 @@ export default {
       return json({ templates: filtered, total: filtered.length }, 200, origin);
     }
 
+    // ─── Terminal Shell ───
+    if (path === '/api/terminal' && method === 'POST') {
+      const body = await request.json();
+      const cmd = (body.command || '').trim();
+      if (!cmd) return json({ error: 'command required' }, 400, origin);
+      // Built-in shell commands
+      const builtins = {
+        'help': 'Available commands: help, ls, cat, pwd, echo, clear, whoami, date, agents, status, roadc <code>',
+        'whoami': 'roadie@blackroad-os',
+        'pwd': '/home/roadie/projects',
+        'date': new Date().toISOString(),
+        'clear': '\x1b[2J',
+        'agents': '27 agents online. Type: agents list, agents chat <name>',
+        'status': 'RoadCode v1.0 | Projects: active | AI: ready | Deploy: enabled',
+      };
+      const parts = cmd.split(/\s+/);
+      const base = parts[0].toLowerCase();
+      if (builtins[base]) return json({ output: builtins[base], command: cmd }, 200, origin);
+      // ls — list project files
+      if (base === 'ls' && db) {
+        try {
+          const files = await db.prepare("SELECT path FROM rc_files ORDER BY path LIMIT 50").all();
+          return json({ output: (files.results || []).map(f => f.path).join('\n') || '(empty)', command: cmd }, 200, origin);
+        } catch { return json({ output: '(no projects)', command: cmd }, 200, origin); }
+      }
+      // cat — read a file
+      if (base === 'cat' && parts[1] && db) {
+        try {
+          const file = await db.prepare("SELECT content FROM rc_files WHERE path = ? LIMIT 1").bind(parts[1]).first();
+          return json({ output: file ? file.content : `cat: ${parts[1]}: No such file`, command: cmd }, 200, origin);
+        } catch { return json({ output: `cat: error reading ${parts[1]}`, command: cmd }, 200, origin); }
+      }
+      // echo
+      if (base === 'echo') return json({ output: parts.slice(1).join(' '), command: cmd }, 200, origin);
+      // roadc — execute RoadC code
+      if (base === 'roadc') {
+        const code = parts.slice(1).join(' ');
+        const result = executeRoadC(code);
+        return json({ output: result, command: cmd, language: 'roadc' }, 200, origin);
+      }
+      // agents chat — talk to an agent
+      if (base === 'agents' && parts[1] === 'chat' && parts[2]) {
+        try {
+          const r = await fetch('https://roadtrip.blackroad.io/api/chat', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ agent: parts[2], message: parts.slice(3).join(' ') || 'hello', channel: 'terminal' })
+          });
+          const d = await r.json();
+          return json({ output: `${parts[2]}: ${d.reply?.content || d.response || '...'}`, command: cmd }, 200, origin);
+        } catch { return json({ output: 'Agent unavailable', command: cmd }, 200, origin); }
+      }
+      // agents list
+      if (base === 'agents' && parts[1] === 'list') {
+        return json({ output: 'roadie lucidia cecilia octavia olympia silas sebastian calliope aria seraphina sapphira lyra thalia alice alexandria sophia gematria theodosia elias portia atticus cicero valeria celeste ophelia gaia anastasia', command: cmd }, 200, origin);
+      }
+      return json({ output: `${base}: command not found. Type 'help' for available commands.`, command: cmd }, 200, origin);
+    }
+
+    // ─── Agent Pair Programming ───
+    if (path === '/api/pair' && method === 'POST') {
+      const body = await request.json();
+      if (!body.code) return json({ error: 'code required' }, 400, origin);
+      const agent = body.agent || 'silas';
+      const action = body.action || 'review'; // review, suggest, explain, debug, optimize
+      const prompts = {
+        review: `Review this code. Find bugs, security issues, and improvements. Be specific. 3-5 points.`,
+        suggest: `Suggest the next thing to add to this code. One specific feature, with example code.`,
+        explain: `Explain this code like I'm a junior developer. What does each part do?`,
+        debug: `This code has a bug. Find it and explain the fix.`,
+        optimize: `Optimize this code for performance. Show the improved version.`,
+      };
+      try {
+        const aiResp = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
+          messages: [
+            { role: 'system', content: `You are ${agent}, a coding assistant at BlackRoad OS. ${prompts[action] || prompts.review} Keep it concise.` },
+            { role: 'user', content: body.code.slice(0, 2000) }
+          ],
+          max_tokens: 500
+        });
+        return json({ agent, action, feedback: aiResp.response || 'No feedback generated', code_length: body.code.length }, 200, origin);
+      } catch (e) {
+        return json({ agent, action, feedback: 'AI unavailable — try again in a moment', error: e.message }, 200, origin);
+      }
+    }
+
+    // ─── Git-like Operations ───
+    if (path === '/api/git/log' && method === 'GET') {
+      if (!db) return json({ error: 'no database' }, 500, origin);
+      const projectId = url.searchParams.get('project');
+      if (!projectId) return json({ error: 'project param required' }, 400, origin);
+      await db.prepare("CREATE TABLE IF NOT EXISTS rc_commits (id TEXT PRIMARY KEY, project_id TEXT, message TEXT, author TEXT DEFAULT 'anonymous', files_changed INTEGER DEFAULT 0, created_at TEXT DEFAULT (datetime('now')))").run();
+      const commits = await db.prepare('SELECT * FROM rc_commits WHERE project_id = ? ORDER BY created_at DESC LIMIT 20').bind(projectId).all();
+      return json({ project: projectId, commits: commits.results || [] }, 200, origin);
+    }
+    if (path === '/api/git/commit' && method === 'POST') {
+      if (!db) return json({ error: 'no database' }, 500, origin);
+      const body = await request.json();
+      if (!body.project_id || !body.message) return json({ error: 'project_id and message required' }, 400, origin);
+      await db.prepare("CREATE TABLE IF NOT EXISTS rc_commits (id TEXT PRIMARY KEY, project_id TEXT, message TEXT, author TEXT DEFAULT 'anonymous', files_changed INTEGER DEFAULT 0, created_at TEXT DEFAULT (datetime('now')))").run();
+      const id = crypto.randomUUID().slice(0, 12);
+      const files = await db.prepare('SELECT COUNT(*) as n FROM rc_files WHERE project_id = ?').bind(body.project_id).first();
+      await db.prepare('INSERT INTO rc_commits (id, project_id, message, author, files_changed) VALUES (?,?,?,?,?)').bind(id, body.project_id, body.message, body.author || 'anonymous', files?.n || 0).run();
+      return json({ ok: true, commit_id: id }, 201, origin);
+    }
+    if (path === '/api/git/diff' && method === 'GET') {
+      if (!db) return json({ error: 'no database' }, 500, origin);
+      const fileId = url.searchParams.get('file');
+      if (!fileId) return json({ error: 'file param required' }, 400, origin);
+      const file = await db.prepare('SELECT * FROM rc_files WHERE id = ?').bind(fileId).first();
+      return json({ file: file ? { path: file.path, version: file.version, size: file.size, language: file.language } : null }, 200, origin);
+    }
+
+    // ─── Collaboration ───
+    if (path === '/api/collab/share' && method === 'POST') {
+      if (!db) return json({ error: 'no database' }, 500, origin);
+      const body = await request.json();
+      if (!body.project_id) return json({ error: 'project_id required' }, 400, origin);
+      await db.prepare("CREATE TABLE IF NOT EXISTS rc_shares (id TEXT PRIMARY KEY, project_id TEXT, shared_with TEXT, permission TEXT DEFAULT 'read', created_at TEXT DEFAULT (datetime('now')))").run();
+      const id = crypto.randomUUID().slice(0, 8);
+      await db.prepare('INSERT INTO rc_shares (id, project_id, shared_with, permission) VALUES (?,?,?,?)').bind(id, body.project_id, body.shared_with || 'public', body.permission || 'read').run();
+      return json({ ok: true, share_id: id, url: `https://roadcode.blackroad.io/shared/${id}` }, 201, origin);
+    }
+    if (path === '/api/collab/shared' && method === 'GET') {
+      if (!db) return json({ error: 'no database' }, 500, origin);
+      await db.prepare("CREATE TABLE IF NOT EXISTS rc_shares (id TEXT PRIMARY KEY, project_id TEXT, shared_with TEXT, permission TEXT DEFAULT 'read', created_at TEXT DEFAULT (datetime('now')))").run();
+      const shares = await db.prepare('SELECT s.*, p.name as project_name FROM rc_shares s LEFT JOIN rc_projects p ON s.project_id = p.id ORDER BY s.created_at DESC LIMIT 20').all();
+      return json({ shares: shares.results || [] }, 200, origin);
+    }
+
     // Legacy API routes (in-memory fallback if no DB)
     if (path.startsWith('/api/')) {
       return handleAPI(path, request, origin);
